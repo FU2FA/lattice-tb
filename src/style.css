@@ -652,3 +652,14 @@ select option {
     height: 170px;
   }
 }
+
+
+.kpath-warning {
+  margin-top: 6px;
+  padding: 7px 8px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.08);
+  color: #fde68a;
+  line-height: 1.35;
+}

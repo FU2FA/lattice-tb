@@ -30,6 +30,7 @@ export function kagome2DLattice(): Lattice {
       K: { label: "K", kFrac: [2 / 3, 1 / 3, 0] },
     },
     defaultPath: ["G", "M", "K", "G"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }

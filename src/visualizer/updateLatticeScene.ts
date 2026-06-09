@@ -119,13 +119,14 @@ export function updateReciprocalSpaceScene(
     renderReciprocalPrimitiveCell(reciprocalGroup, lattice);
   }
 
-  // v47: show the default high-symmetry k-path directly in reciprocal space.
+  // Draw the high-symmetry path only when the Brillouin zone is visible.
+  // Otherwise the path can look like an arbitrary line floating in reciprocal space.
   if (options.showBrillouinZone) {
     renderReciprocalKPath(reciprocalGroup, lattice, kPathLabels);
-  }
-  // v48: marker controlled by band-plot hover.
-  if (options.showBrillouinZone && hoveredK) {
-  renderReciprocalKMarker(reciprocalGroup, hoveredK);
+
+    if (hoveredK) {
+      renderReciprocalKMarker(reciprocalGroup, hoveredK);
+    }
   }
 
   if (resetCamera) {

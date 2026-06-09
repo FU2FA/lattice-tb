@@ -1,7 +1,7 @@
 import type { Vec3 } from "../math/vec";
 import type { Lattice } from "../lattice/types";
 import { lerp, norm, vsub } from "../math/vec";
-import { projectedReciprocalPointForDisplay } from "../lattice/bzProjection";
+import { reciprocalFracToCart } from "../lattice/reciprocal";
 
 export interface KPathPoint {
   x: number;
@@ -25,8 +25,8 @@ export function makeBandPath(lattice: Lattice, labels: string[], pointsPerSegmen
     const start = fracPoints[s];
     const end = fracPoints[s + 1];
 
-    const k0 = projectedReciprocalPointForDisplay(lattice, start.kFrac);
-    const k1 = projectedReciprocalPointForDisplay(lattice, end.kFrac);
+    const k0 = reciprocalFracToCart(lattice, start.kFrac);
+    const k1 = reciprocalFracToCart(lattice, end.kFrac);
     const segmentLength = norm(vsub(k1, k0));
 
     for (let i = 0; i <= pointsPerSegment; i++) {

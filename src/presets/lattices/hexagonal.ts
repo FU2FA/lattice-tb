@@ -29,7 +29,8 @@ export function hexagonalLattice(): Lattice {
       L: { label: "L", kFrac: [0.5, 0, 0.5] },
       H: { label: "H", kFrac: [2 / 3, 1 / 3, 0.5] },
     },
-    defaultPath: ["G", "M", "K", "G", "A", "L", "H", "A"],
+    defaultPath: ["G", "M", "K", "G", "A", "L", "H", "A", "L", "M", "K", "H"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }

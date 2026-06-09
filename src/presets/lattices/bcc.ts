@@ -27,7 +27,8 @@ export function bccLattice(): Lattice {
       N: { label: "N", kFrac: [0, 0, 0.5] },
       P: { label: "P", kFrac: [0.25, 0.25, 0.25] },
     },
-    defaultPath: ["G", "H", "N", "G", "P", "H"],
+    defaultPath: ["G", "H", "N", "G", "P", "H", "P", "N"],
+    kPathConvention: "standard",
     visualBondCutoff: 0.9,
   };
 }

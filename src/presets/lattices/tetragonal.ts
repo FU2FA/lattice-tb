@@ -25,7 +25,8 @@ export function tetragonalLattice(): Lattice {
       R: { label: "R", kFrac: [0.5, 0, 0.5] },
       A: { label: "A", kFrac: [0.5, 0.5, 0.5] },
     },
-    defaultPath: ["G", "X", "M", "G", "Z", "R", "A", "Z"],
+    defaultPath: ["G", "X", "M", "G", "Z", "R", "A", "Z", "X", "R", "M", "A"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }

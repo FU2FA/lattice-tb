@@ -22,6 +22,7 @@ export function scLattice(): Lattice {
       R: { label: "R", kFrac: [0.5, 0.5, 0.5] },
     },
     defaultPath: ["G", "X", "M", "G", "R", "X"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }

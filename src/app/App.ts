@@ -11,17 +11,11 @@ import { solveBands } from "../core/tightbinding/solveBands";
 import { solveDOS, type DOSProjectionMode } from "../core/tightbinding/solveDos";
 import type { BandColorMode } from "../core/tightbinding/tbTypes";
 import type { Vec3 } from "../core/math/vec";
+import type { Lattice } from "../core/lattice/types";
 import { BandPlot } from "./BandPlot";
 import { DOSPlot } from "./DOSPlot";
 import { latticeExplanation, modelExplanation } from "./explanations";
 import { renderFormulaHelp } from "./formulaHelp";
-import { scaleLatticeAnisotropic } from "../core/lattice/scaleLattice";
-import {
-  applyPhysicalOptions,
-  DEFAULT_PHYSICAL_OPTIONS,
-  type HoppingScaleMode,
-  type PhysicalOptions,
-} from "../core/tightbinding/physicalSimulation";
 
 export class App {
   private bandIsStale = false;
@@ -56,8 +50,6 @@ export class App {
     showBrillouinZone: false,
     showReciprocalPrimitiveCell: false,
   };
-
-  private physicalOptions: PhysicalOptions = structuredClone(DEFAULT_PHYSICAL_OPTIONS);
   private shellOptions = {
     epsilon: 0,
     t1: -1,
@@ -75,15 +67,6 @@ export class App {
   private supercellInput!: HTMLInputElement;
   private primitiveCellCheckbox!: HTMLInputElement;
   private simpleCubicCellCheckbox!: HTMLInputElement;
-  private scaleXSlider!: HTMLInputElement;
-  private scaleYSlider!: HTMLInputElement;
-  private scaleZSlider!: HTMLInputElement;
-  private scaleXValue!: HTMLSpanElement;
-  private scaleYValue!: HTMLSpanElement;
-  private scaleZValue!: HTMLSpanElement;
-  private hoppingModeSelect!: HTMLSelectElement;
-  private betaInput!: HTMLInputElement;
-  private powerInput!: HTMLInputElement;
   private pointsInput!: HTMLInputElement;
   private kPathPresetSelect!: HTMLSelectElement;
   private kPathStatus!: HTMLDivElement;
@@ -281,15 +264,15 @@ export class App {
     this.supercellInput.addEventListener("change", applyDisplayCellsPerAxis);
 
 
-    this.bindCheckbox(panel, "#show-simple-cubic-cell", (v) => this.renderOptions.showSimpleCubicCell = v);
-    this.bindCheckbox(panel, "#show-primitive-cell", (v) => this.renderOptions.showPrimitiveCell = v);
-    this.bindCheckbox(panel, "#show-cartesian-frame", (v) => this.renderOptions.showCartesianFrame = v);
-    this.bindCheckbox(panel, "#show-bonds", (v) => this.renderOptions.showBonds = v);
-    this.bindCheckbox(panel, "#show-axes", (v) => this.renderOptions.showAxes = v);
-    this.bindCheckbox(panel, "#show-wigner-seitz", (v) => this.renderOptions.showWignerSeitz = v);
-    this.bindCheckbox(panel, "#show-reciprocal-lattice", (v) => this.renderOptions.showReciprocalLattice = v);
-    this.bindCheckbox(panel, "#show-brillouin-zone", (v) => this.renderOptions.showBrillouinZone = v);
-    this.bindCheckbox(panel, "#show-reciprocal-primitive-cell", (v) => this.renderOptions.showReciprocalPrimitiveCell = v);
+    this.bindCheckbox(panel, "#show-simple-cubic-cell", this.renderOptions.showSimpleCubicCell, (v) => this.renderOptions.showSimpleCubicCell = v);
+    this.bindCheckbox(panel, "#show-primitive-cell", this.renderOptions.showPrimitiveCell, (v) => this.renderOptions.showPrimitiveCell = v);
+    this.bindCheckbox(panel, "#show-cartesian-frame", this.renderOptions.showCartesianFrame, (v) => this.renderOptions.showCartesianFrame = v);
+    this.bindCheckbox(panel, "#show-bonds", this.renderOptions.showBonds, (v) => this.renderOptions.showBonds = v);
+    this.bindCheckbox(panel, "#show-axes", this.renderOptions.showAxes, (v) => this.renderOptions.showAxes = v);
+    this.bindCheckbox(panel, "#show-wigner-seitz", this.renderOptions.showWignerSeitz, (v) => this.renderOptions.showWignerSeitz = v);
+    this.bindCheckbox(panel, "#show-reciprocal-lattice", this.renderOptions.showReciprocalLattice, (v) => this.renderOptions.showReciprocalLattice = v);
+    this.bindCheckbox(panel, "#show-brillouin-zone", this.renderOptions.showBrillouinZone, (v) => this.renderOptions.showBrillouinZone = v);
+    this.bindCheckbox(panel, "#show-reciprocal-primitive-cell", this.renderOptions.showReciprocalPrimitiveCell, (v) => this.renderOptions.showReciprocalPrimitiveCell = v);
   }
 
 
@@ -420,8 +403,17 @@ export class App {
     this.primitiveCellCheckbox.title = "";
   }
 
-  private bindCheckbox(panel: HTMLDivElement, selector: string, setter: (checked: boolean) => void): void {
-    panel.querySelector<HTMLInputElement>(selector)!.addEventListener("change", (event) => {
+  private bindCheckbox(
+    panel: HTMLDivElement,
+    selector: string,
+    initialChecked: boolean,
+    setter: (checked: boolean) => void,
+  ): void {
+    const input = panel.querySelector<HTMLInputElement>(selector)!;
+    input.checked = initialChecked;
+    setter(initialChecked);
+
+    input.addEventListener("change", (event) => {
       setter((event.target as HTMLInputElement).checked);
       this.refreshScene();
     });
@@ -429,48 +421,6 @@ export class App {
 
   private buildRightPanel(panel: HTMLDivElement): void {
     panel.innerHTML = `
-      <h2>TB parameters</h2>
-
-      <label>Physical scale applied to x/y/z</label>
-      <div class="slider-stack">
-        <label class="slider-row">
-          <span>x</span>
-          <input id="scale-x-slider" type="range" min="0.2" max="5" step="0.01" value="${this.physicalOptions.scale.x}" />
-          <span id="scale-x-value" class="slider-value">${this.physicalOptions.scale.x.toFixed(2)}</span>
-        </label>
-        <label class="slider-row">
-          <span>y</span>
-          <input id="scale-y-slider" type="range" min="0.2" max="5" step="0.01" value="${this.physicalOptions.scale.y}" />
-          <span id="scale-y-value" class="slider-value">${this.physicalOptions.scale.y.toFixed(2)}</span>
-        </label>
-        <label class="slider-row">
-          <span>z</span>
-          <input id="scale-z-slider" type="range" min="0.2" max="5" step="0.01" value="${this.physicalOptions.scale.z}" />
-          <span id="scale-z-value" class="slider-value">${this.physicalOptions.scale.z.toFixed(2)}</span>
-        </label>
-      </div>
-
-      <label for="hopping-mode-select">Hopping scale law</label>
-      <select id="hopping-mode-select">
-        <option value="fixed">fixed: t(d)=t0</option>
-        <option value="exponential" selected>exponential: t0 exp[-β(d/d0-1)]</option>
-        <option value="power">power: t0(d0/d)^n</option>
-      </select>
-
-      <div class="param-grid">
-        <div>
-          <label for="beta-input">β</label>
-          <input id="beta-input" type="number" min="0" max="20" step="0.1" value="${this.physicalOptions.beta}" />
-        </div>
-        <div>
-          <label for="power-input">n</label>
-          <input id="power-input" type="number" min="0" max="12" step="0.1" value="${this.physicalOptions.power}" />
-        </div>
-      </div>
-
-      <button id="apply-physics-button">Apply simulation</button>
-      <button id="reset-physics-button" class="secondary-button">Reset TB parameters</button>
-
       <h2>Band model</h2>
 
       <label for="model-select">Model</label>
@@ -574,15 +524,6 @@ export class App {
     `;
 
     this.modelSelect = panel.querySelector<HTMLSelectElement>("#model-select")!;
-    this.scaleXSlider = panel.querySelector<HTMLInputElement>("#scale-x-slider")!;
-    this.scaleYSlider = panel.querySelector<HTMLInputElement>("#scale-y-slider")!;
-    this.scaleZSlider = panel.querySelector<HTMLInputElement>("#scale-z-slider")!;
-    this.scaleXValue = panel.querySelector<HTMLSpanElement>("#scale-x-value")!;
-    this.scaleYValue = panel.querySelector<HTMLSpanElement>("#scale-y-value")!;
-    this.scaleZValue = panel.querySelector<HTMLSpanElement>("#scale-z-value")!;
-    this.hoppingModeSelect = panel.querySelector<HTMLSelectElement>("#hopping-mode-select")!;
-    this.betaInput = panel.querySelector<HTMLInputElement>("#beta-input")!;
-    this.powerInput = panel.querySelector<HTMLInputElement>("#power-input")!;
     this.pointsInput = panel.querySelector<HTMLInputElement>("#points-input")!;
     this.kPathPresetSelect = panel.querySelector<HTMLSelectElement>("#k-path-preset-select")!;
     this.kPathStatus = panel.querySelector<HTMLDivElement>("#k-path-status")!;
@@ -614,35 +555,6 @@ export class App {
       this.customKPathLabels = null;
       this.syncKPathInputFromState();
       this.syncShellSlidersFromState();
-      this.refreshAll();
-    });
-
-    const applyPhysics = () => {
-      this.readPhysicalOptionsFromUI();
-      this.refreshAll();
-    };
-
-    const previewPhysics = () => {
-      this.readPhysicalOptionsFromUI();
-      this.refreshAll();
-    };
-
-    this.scaleXSlider.addEventListener("input", previewPhysics);
-    this.scaleYSlider.addEventListener("input", previewPhysics);
-    this.scaleZSlider.addEventListener("input", previewPhysics);
-
-    panel.querySelector<HTMLButtonElement>("#apply-physics-button")!.addEventListener("click", applyPhysics);
-
-    this.hoppingModeSelect.addEventListener("change", applyPhysics);
-    this.betaInput.addEventListener("change", applyPhysics);
-    this.powerInput.addEventListener("change", applyPhysics);
-
-    panel.querySelector<HTMLButtonElement>("#reset-physics-button")!.addEventListener("click", () => {
-      this.physicalOptions = structuredClone(DEFAULT_PHYSICAL_OPTIONS);
-      this.hoppingModeSelect.value = this.physicalOptions.hoppingScaleMode;
-      this.betaInput.value = String(this.physicalOptions.beta);
-      this.powerInput.value = String(this.physicalOptions.power);
-      this.syncScaleSlidersFromState();
       this.refreshAll();
     });
 
@@ -683,7 +595,6 @@ export class App {
     });
 
     panel.querySelector<HTMLButtonElement>("#calculate-button")!.addEventListener("click", () => {
-      this.readPhysicalOptionsFromUI();
       this.refreshBands();
     });
 
@@ -710,7 +621,6 @@ export class App {
     });
 
     panel.querySelector<HTMLButtonElement>("#calculate-dos-button")!.addEventListener("click", () => {
-      this.readPhysicalOptionsFromUI();
       this.refreshDOS();
     });
 
@@ -778,54 +688,6 @@ export class App {
 
     this.syncShellSlidersFromState();
   }
-
-  private syncScaleSlidersFromState(): void {
-    const s = this.physicalOptions.scale;
-    if (!this.scaleXSlider || !this.scaleYSlider || !this.scaleZSlider) {
-      return;
-    }
-
-    this.scaleXSlider.value = String(s.x);
-    this.scaleYSlider.value = String(s.y);
-    this.scaleZSlider.value = String(s.z);
-    this.scaleXValue.textContent = s.x.toFixed(2);
-    this.scaleYValue.textContent = s.y.toFixed(2);
-    this.scaleZValue.textContent = s.z.toFixed(2);
-  }
-
-  private readPhysicalOptionsFromUI(): void {
-    let sx = Number(this.scaleXSlider?.value ?? this.physicalOptions.scale.x);
-    let sy = Number(this.scaleYSlider?.value ?? this.physicalOptions.scale.y);
-    let sz = Number(this.scaleZSlider?.value ?? this.physicalOptions.scale.z);
-
-    if (!Number.isFinite(sx)) sx = 1;
-    if (!Number.isFinite(sy)) sy = 1;
-    if (!Number.isFinite(sz)) sz = 1;
-
-    sx = Math.max(0.05, Math.min(20, sx));
-    sy = Math.max(0.05, Math.min(20, sy));
-    sz = Math.max(0.05, Math.min(20, sz));
-
-    let beta = Number(this.betaInput.value);
-    if (!Number.isFinite(beta)) beta = 3;
-    beta = Math.max(0, Math.min(20, beta));
-
-    let power = Number(this.powerInput.value);
-    if (!Number.isFinite(power)) power = 2;
-    power = Math.max(0, Math.min(12, power));
-
-    this.physicalOptions = {
-      scale: { x: sx, y: sy, z: sz },
-      hoppingScaleMode: this.hoppingModeSelect.value as HoppingScaleMode,
-      beta,
-      power,
-    };
-
-    this.syncScaleSlidersFromState();
-    this.betaInput.value = String(beta);
-    this.powerInput.value = String(power);
-  }
-
   private updateModelOptions(): void {
     const models = modelsForLattice(this.latticeId);
     const options = models.length > 0 ? models : MODEL_FACTORIES;
@@ -875,12 +737,11 @@ export class App {
     const split = usesReciprocalView(this.renderOptions);
     if (!split) return;
 
-    const baseLattice = latticeById(this.latticeId);
-    const physicalLattice = scaleLatticeAnisotropic(baseLattice, this.physicalOptions.scale);
+    const lattice = latticeById(this.latticeId);
 
     updateReciprocalSpaceScene(
       this.reciprocalManager,
-      physicalLattice,
+      lattice,
       this.renderOptions,
       false,
       this.activeKPathLabels(),
@@ -977,6 +838,37 @@ export class App {
 
     return out;
   }
+  private kPathWarningMessages(lattice: Lattice): string[] {
+    const messages: string[] = [];
+
+    if (lattice.kPathConvention === "schematic") {
+      messages.push("This k-path is schematic and mainly intended for visualization.");
+    }
+
+    if (lattice.kPathConvention === "parameter-dependent") {
+      messages.push("This lattice has parameter-dependent high-symmetry points; the current path is schematic.");
+    }
+
+    if (lattice.kPathNotes) {
+      messages.push(...lattice.kPathNotes);
+    }
+
+    return messages;
+  }
+
+  private kPathWarningHTML(lattice: Lattice): string {
+    const messages = this.kPathWarningMessages(lattice);
+
+    if (messages.length === 0) {
+      return "";
+    }
+
+    return `
+      <div class="kpath-warning">
+        ${messages.map((message) => `<div>⚠ ${message}</div>`).join("")}
+      </div>
+    `;
+  }
 
   private syncKPathInputFromState(): void {
     if (!this.kPathPresetSelect || !this.kPathStatus) return;
@@ -1000,11 +892,13 @@ export class App {
       this.kPathPresetSelect.appendChild(option);
     }
 
+    const baseModel = modelById(this.modelId, { shellS: this.shellOptions });
     const available = this.availableKLabels().join(", ");
     this.kPathStatus.innerHTML = `
       <span class="badge">${this.customKPathLabels ? "custom preset" : "default path"}</span>
       <span class="badge">active: ${active.join(" → ")}</span>
       <span class="badge">available: ${available}</span>
+      ${this.kPathWarningHTML(baseModel.lattice)}
     `;
   }
 
@@ -1040,8 +934,7 @@ export class App {
   }
 
   private refreshScene(): void {
-    const baseLattice = latticeById(this.latticeId);
-    const physicalLattice = scaleLatticeAnisotropic(baseLattice, this.physicalOptions.scale);
+    const lattice = latticeById(this.latticeId);
 
     const split = usesReciprocalView(this.renderOptions);
     const resetCamera = !this.hasInitializedCamera || split !== this.previousSplitState;
@@ -1050,12 +943,12 @@ export class App {
     this.viewerRoot.classList.toggle("single", !split);
     this.reciprocalSceneRoot.classList.toggle("hidden", !split);
 
-    updateRealSpaceScene(this.realManager, physicalLattice, this.renderOptions, resetCamera);
+    updateRealSpaceScene(this.realManager, lattice, this.renderOptions, resetCamera);
 
     if (split) {
       updateReciprocalSpaceScene(
         this.reciprocalManager,
-        physicalLattice,
+        lattice,
         this.renderOptions,
         resetCamera,
         this.activeKPathLabels(),
@@ -1144,8 +1037,7 @@ export class App {
 
   private exportCurrentModelJSON(): void {
     this.readShellOptionsFromUI();
-    const baseModel = modelById(this.modelId, { shellS: this.shellOptions });
-    const model = applyPhysicalOptions(baseModel, this.physicalOptions);
+    const model = modelById(this.modelId, { shellS: this.shellOptions });
     this.downloadText(this.exportName("tb-model", "json"), this.compactJSONStringify(model));
   }
 
@@ -1215,10 +1107,10 @@ export class App {
   private refreshBands(): void {
     try {
       this.readShellOptionsFromUI();
-      const baseModel = modelById(this.modelId, {
+      const model = modelById(this.modelId, {
         shellS: this.shellOptions,
       });
-      const model = applyPhysicalOptions(baseModel, this.physicalOptions);
+      const baseModel = model;
       const labels = this.activeKPathLabels();
 
       const pointsPerSegment = Math.max(8, Math.min(120, Number(this.pointsInput.value) || 36));
@@ -1229,23 +1121,19 @@ export class App {
       this.hoveredBandK = null;
       this.bandIsStale = false;
       if (this.bandWarningBox) {
-        this.bandWarningBox.textContent = "";
-        this.bandWarningBox.classList.add("hidden");
+        const warnings = this.kPathWarningMessages(baseModel.lattice);
+        this.bandWarningBox.textContent = warnings.join(" ");
+        this.bandWarningBox.classList.toggle("hidden", warnings.length === 0);
       }
       this.bandPlot.draw(result);
       if (this.bandSummaryBox) {
         this.bandSummaryBox.innerHTML = this.bandSummaryHTML(result);
       }
 
-      const s = this.physicalOptions.scale;
 
       this.infoBox.innerHTML = `
         <div>
           <span class="badge">${model.lattice.name}</span>
-          <span class="badge">sx=${s.x.toFixed(2)}</span>
-          <span class="badge">sy=${s.y.toFixed(2)}</span>
-          <span class="badge">sz=${s.z.toFixed(2)}</span>
-          <span class="badge">${this.physicalOptions.hoppingScaleMode}</span>
           <span class="badge">${model.orbitals.length} orbitals</span>
           <span class="badge">${model.hoppings.length} hopping terms</span>
           <span class="badge">color=${result.colorMode ?? "plain"}</span>
@@ -1256,9 +1144,8 @@ export class App {
         <p>
           Current model: <span class="code-like">${baseModel.name}</span><br />
           k-path: <span class="code-like">${labels.join(" → ")}</span>${this.customKPathLabels ? " (custom)" : " (default)"}<br />
+          ${this.kPathWarningHTML(baseModel.lattice)}
           Bands: <span class="code-like">${result.bandCount}</span><br />
-          Hopping law:
-          <span class="code-like">${this.describeHoppingLaw()}</span>
         </p>
       `;
     } catch (error) {
@@ -1272,10 +1159,10 @@ export class App {
     try {
       this.readShellOptionsFromUI();
 
-      const baseModel = modelById(this.modelId, {
+      const model = modelById(this.modelId, {
         shellS: this.shellOptions,
       });
-      const model = applyPhysicalOptions(baseModel, this.physicalOptions);
+      const baseModel = model;
 
       let kGridSize = Number(this.dosGridInput.value);
       if (!Number.isFinite(kGridSize)) kGridSize = 18;
@@ -1304,19 +1191,5 @@ export class App {
       console.error(error);
       this.infoBox.innerHTML = `<p style="color:#fca5a5">${error instanceof Error ? error.message : String(error)}</p>`;
     }
-  }
-
-  private describeHoppingLaw(): string {
-    const opt = this.physicalOptions;
-
-    if (opt.hoppingScaleMode === "fixed") {
-      return "t(d)=t0";
-    }
-
-    if (opt.hoppingScaleMode === "exponential") {
-      return `t(d)=t0 exp[-${opt.beta}(d/d0-1)]`;
-    }
-
-    return `t(d)=t0(d0/d)^${opt.power}`;
   }
 }

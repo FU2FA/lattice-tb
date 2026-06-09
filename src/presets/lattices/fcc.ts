@@ -27,8 +27,10 @@ export function fccLattice(): Lattice {
       L: { label: "L", kFrac: [0.5, 0.5, 0.5] },
       W: { label: "W", kFrac: [0.25, 0.75, 0.5] },
       K: { label: "K", kFrac: [0.375, 0.75, 0.375] },
+      U: { label: "U", kFrac: [0.625, 0.25, 0.625] },
     },
-    defaultPath: ["G", "X", "W", "K", "G", "L"],
+    defaultPath: ["G", "X", "W", "K", "G", "L", "U", "W", "L", "K", "U", "X"],
+    kPathConvention: "standard",
     visualBondCutoff: 0.73,
   };
 }

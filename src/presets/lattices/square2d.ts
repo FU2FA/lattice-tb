@@ -24,6 +24,7 @@ export function square2DLattice(): Lattice {
       M: { label: "M", kFrac: [0.5, 0.5, 0] },
     },
     defaultPath: ["G", "X", "M", "G"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }

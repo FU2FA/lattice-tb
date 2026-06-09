@@ -13,6 +13,8 @@ export interface HighSymmetryPoint {
   kFrac: Vec3; // reciprocal fractional coordinate
 }
 
+export type KPathConvention = "standard" | "schematic" | "parameter-dependent";
+
 export interface Lattice {
   id: string;
   name: string;
@@ -55,5 +57,14 @@ export interface Lattice {
 
   highSymmetry: Record<string, HighSymmetryPoint>;
   defaultPath: string[];
+
+  // Describes how reliable the built-in k-path is for the current preset.
+  // "standard" means a common primitive reciprocal-space convention is used.
+  // "schematic" means the path is mainly for visualization.
+  // "parameter-dependent" means a fully standard path depends on lattice ratios
+  // such as c/a or rhombohedral angle.
+  kPathConvention?: KPathConvention;
+  kPathNotes?: string[];
+
   visualBondCutoff: number;
 }

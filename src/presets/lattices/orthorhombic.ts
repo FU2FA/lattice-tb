@@ -23,9 +23,12 @@ export function orthorhombicLattice(): Lattice {
       Y: { label: "Y", kFrac: [0, 0.5, 0] },
       Z: { label: "Z", kFrac: [0, 0, 0.5] },
       S: { label: "S", kFrac: [0.5, 0.5, 0] },
+      U: { label: "U", kFrac: [0.5, 0, 0.5] },
+      T: { label: "T", kFrac: [0, 0.5, 0.5] },
       R: { label: "R", kFrac: [0.5, 0.5, 0.5] },
     },
-    defaultPath: ["G", "X", "S", "Y", "G", "Z", "R"],
+    defaultPath: ["G", "X", "S", "Y", "G", "Z", "U", "R", "T", "Z", "Y", "T", "U", "X", "S", "R"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.1,
   };
 }

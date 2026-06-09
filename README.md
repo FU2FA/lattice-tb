@@ -4,19 +4,23 @@ Interactive web visualizer for lattice structures, reciprocal space, tight-bindi
 
 This is an educational tight-binding tool, not an ab-initio or DFT code.
 
+This project was vibe-coded with AI assistance. The code, UI, formulas, and numerical behavior should be treated as an educational implementation and checked before being used for research or engineering work.
+
+Lattice scaling controls were intentionally omitted so that the default Brillouin zones and high-symmetry paths remain consistent with the preset structures.
+
 ## Features
 
-* Real-space lattice visualization
-* Reciprocal lattice and Brillouin zone visualization
-* Guide cells, primitive cells, and Wigner-Seitz cells
-* Visual nearest-neighbor bonds
-* Tight-binding band calculation
-* DOS / PDOS calculation
-* Fermi-level estimate from electron filling
-* Orbital/site band coloring
-* Band reference overlay
-* Band/DOS/model export
-* KaTeX formula help panel
+- Real-space lattice visualization
+- Reciprocal lattice and Brillouin zone visualization
+- Guide cells, primitive cells, and Wigner-Seitz cells
+- Visual nearest-neighbor bonds
+- Tight-binding band calculation
+- DOS / PDOS calculation
+- Fermi-level estimate from electron filling
+- Orbital/site band coloring
+- Band reference overlay
+- Band/DOS/model export
+- KaTeX formula help panel
 
 ## Run locally
 
@@ -95,19 +99,17 @@ electrons per cell = user setting
 
 High-symmetry k-points and band paths in this app are intended mainly for educational visualization.
 
-For simple cubic, FCC, BCC, square, triangular, and basic hexagonal lattices, the provided paths are close to commonly used high-symmetry paths. However, some Bravais lattices have parameter-dependent Brillouin zones and k-paths.
+For simple cubic, FCC, BCC, square, triangular, and basic hexagonal lattices, the initial high-symmetry points follow commonly used primitive reciprocal-space conventions. The built-in default paths use shared Bravais-lattice conventions for structures with the same underlying Bravais lattice.
 
-In particular, body-centered tetragonal (BCT), rhombohedral, and other lower-symmetry lattices can require different high-symmetry point definitions depending on lattice parameters such as the `c/a` ratio or cell angle. Therefore, their current k-paths should be treated as schematic rather than fully standardized crystallographic paths.
-
-Changing lattice constants anisotropically can also break the original symmetry of a preset lattice. In that case, the displayed high-symmetry labels may no longer represent the true symmetry path of the modified lattice.
+Some Bravais lattices have parameter-dependent Brillouin zones and k-paths. In particular, body-centered tetragonal (BCT), rhombohedral, and other lower-symmetry lattices can require different high-symmetry point definitions depending on lattice parameters such as the `c/a` ratio or cell angle.
 
 ## Notes
 
-* Visual nearest-neighbor bonds are geometric only. They are not necessarily the same as TB hopping terms.
-* Anisotropic lattice scaling can break the original symmetry labels of high-symmetry k-points.
-* The `sp3` model is a simplified educational model, not a fitted material parameterization.
-* DOS and Fermi level values depend on k-grid size, broadening, and electron filling.
-* Guide cells are chosen for visual clarity and are not always cubic.
+- Visual nearest-neighbor bonds are geometric only. They are not necessarily the same as TB hopping terms.
+- The `sp3` model is a simplified educational model, not a fitted material parameterization.
+- DOS and Fermi level values depend on k-grid size, broadening, and electron filling.
+- Guide cells are chosen for visual clarity and are not always cubic.
+- The implementation was developed through iterative vibe coding, so formulas and code paths should be reviewed if accuracy is important.
 
 ## Main source folders
 

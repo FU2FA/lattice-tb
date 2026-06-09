@@ -27,9 +27,10 @@ export function dice2DLattice(): Lattice {
     highSymmetry: {
       G: { label: "Γ", kFrac: [0, 0, 0] },
       M: { label: "M", kFrac: [0.5, 0, 0] },
-      K: { label: "K", kFrac: [1 / 3, 2 / 3, 0] },
+      K: { label: "K", kFrac: [2 / 3, 1 / 3, 0] },
     },
     defaultPath: ["G", "M", "K", "G"],
+    kPathConvention: "standard",
     visualBondCutoff: 1.05,
   };
 }
