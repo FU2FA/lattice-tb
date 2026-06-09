@@ -261,62 +261,7 @@ Site 0 / Site 1 weight
 
 Some coloring options may not be meaningful for all models. For example, `p`-orbital weights are meaningful only when the model contains p orbitals.
 
-### Band reference overlay
 
-You can save the current band as a reference. The saved reference is drawn as a dashed curve behind the current band.
-
-This is useful for comparing:
-
-```txt
-scale changes
-hopping-law changes
-beta / n changes
-t1 / t2 / t3 changes
-different TB models
-```
-
-### Floating band overlay
-
-The band plot and these buttons are shown in a floating overlay:
-
-```txt
-Save reference
-Clear reference
-Export band PNG
-Export model JSON
-```
-
-The overlay size is controlled in `src/style.css` under:
-
-```css
-/* v73 compact band overlay with right-side actions */
-.floating-band-overlay { ... }
-.floating-band-content { ... }
-.floating-band-canvas { ... }
-.floating-band-actions { ... }
-```
-
-Useful knobs:
-
-```css
-/* overall width */
-.floating-band-overlay {
-  width: min(720px, calc(100vw - 700px));
-  min-width: 560px;
-}
-
-/* plot height */
-.floating-band-canvas {
-  height: 185px;
-}
-
-/* button column width */
-.floating-band-content {
-  grid-template-columns: minmax(0, 1fr) 132px;
-}
-```
-
----
 
 ## 8. DOS, PDOS, and Fermi level
 
@@ -349,30 +294,8 @@ This is a numerical educational estimate. It is not a finite-temperature self-co
 
 ---
 
-## 9. Calculation help panel
 
-The app includes a collapsible `Calculation help` panel.
-
-It uses KaTeX to render formulas for:
-
-```txt
-Bloch tight-binding Hamiltonian
-Eigenvalue problem
-DOS
-PDOS
-distance-dependent hopping
-Fermi filling
-```
-
-KaTeX is included as a dependency. A local TypeScript declaration file is provided, so `@types/katex` is not required.
-
-```txt
-src/types/katex.d.ts
-```
-
----
-
-## 10. Export features
+## 9. Export features
 
 The app can export:
 
@@ -399,13 +322,9 @@ scale-adjusted hopping values
 
 JSON formatting is compacted so short vectors appear on one line, for example:
 
-```json
-"a": [2, 0, 0]
-```
-
 ---
 
-## 11. Known limitations
+## 10. limitations
 
 This app is intentionally simplified.
 
@@ -442,88 +361,6 @@ Guide/conventional cells are chosen for clarity. For non-cubic structures, the d
 
 ---
 
-## 12. Suggested workflows
-
-### Compare scale effects
-
-1. Select a lattice and TB model.
-2. Calculate bands.
-3. Save band reference.
-4. Change `x/y/z scale`.
-5. Compare the new band against the reference.
-
-### Explore graphene-like honeycomb bands
-
-1. Select `Honeycomb`.
-2. Select the honeycomb `pz` model.
-3. Use path `Γ → M → K → Γ`.
-4. Set electrons/cell near `2`.
-5. Inspect band crossing near `K`.
-
-### Explore kagome flat-band behavior
-
-1. Select `Kagome`.
-2. Use a simple nearest-neighbor `s` model.
-3. Use a hexagonal 2D path.
-4. Inspect the flat or nearly flat band feature.
-
-### Check orbital character
-
-1. Select an `sp3` model.
-2. Calculate bands.
-3. Change band coloring to `s weight` or `p total weight`.
-4. Calculate PDOS with matching projection.
-
----
-
-## 13. Version highlights
-
-Recent major changes:
-
-```txt
-v50   DOS / PDOS / EF foundation
-v51   Band reference overlay
-v52   Band summary
-v53   Export PNG / JSON
-v54   Structure and model guide
-v55   Compact JSON formatting
-v56   Removed long band title inside plot
-v57   Real-space axis/cell flicker reduction
-v58   2D triangular/kagome K-point correction
-v59   3D strained BZ path projection
-v60   KaTeX formula help
-v61   k-path preset selector
-v62   Removed @types/katex requirement
-v63   3D hexagonal-family K/H correction
-v64-v67 UI spacing/order experiments
-v68-v73 Band plot floating overlay experiments/fixes
-v74   Reciprocal-space line overlap/z-fighting reduction
-```
-
----
-
-## 14. Development notes
-
-When adding new lattices:
-
-1. Define lattice vectors.
-2. Define basis sites.
-3. Define display/guide cell if needed.
-4. Define high-symmetry points.
-5. Check reciprocal BZ point placement visually.
-6. Add or reuse a compatible TB model.
-
-When adding new TB models:
-
-1. Define orbitals.
-2. Define onsite terms.
-3. Define hopping terms.
-4. Decide default electron filling.
-5. Decide default k-path.
-6. Check band count: `number of sites × orbitals per site`.
-
----
-
-## 15. License / usage
+## 11. License / usage
 
 This starter project is intended for educational and personal experimentation. Add a formal license before distributing it publicly.
