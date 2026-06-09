@@ -80,7 +80,7 @@ export function updateRealSpaceScene(manager: SceneManager, lattice: Lattice, op
 
   if (resetCamera) {
     manager.controls.target.set(0, 0, 0);
-    const cameraDistance = Math.max(4.5, safeScale * options.supercellSize * 1.8);
+    const cameraDistance = Math.max(9.5, safeScale * options.supercellSize * 1.8);
     manager.camera.position.set(cameraDistance, cameraDistance, lattice.dim === 2 ? cameraDistance * 1.15 : cameraDistance * 0.8);
   }
   manager.controls.update();
@@ -120,11 +120,12 @@ export function updateReciprocalSpaceScene(
   }
 
   // v47: show the default high-symmetry k-path directly in reciprocal space.
-  renderReciprocalKPath(reciprocalGroup, lattice, kPathLabels);
-
+  if (options.showBrillouinZone) {
+    renderReciprocalKPath(reciprocalGroup, lattice, kPathLabels);
+  }
   // v48: marker controlled by band-plot hover.
-  if (hoveredK) {
-    renderReciprocalKMarker(reciprocalGroup, hoveredK);
+  if (options.showBrillouinZone && hoveredK) {
+  renderReciprocalKMarker(reciprocalGroup, hoveredK);
   }
 
   if (resetCamera) {

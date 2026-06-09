@@ -38,7 +38,7 @@ export class App {
   private modelId = "sc_s";
 
   private renderOptions: RenderOptions = {
-    supercellSize: 3,
+    supercellSize: 2,
     viewScale: 1,
     reciprocalViewScale: 0.18,
 
@@ -54,7 +54,7 @@ export class App {
     showWignerSeitz: false,
     showReciprocalLattice: false,
     showBrillouinZone: false,
-    showReciprocalPrimitiveCell: true,
+    showReciprocalPrimitiveCell: false,
   };
 
   private physicalOptions: PhysicalOptions = structuredClone(DEFAULT_PHYSICAL_OPTIONS);
@@ -227,7 +227,7 @@ export class App {
       </label>
 
       <label class="checkbox-row">
-        <input id="show-reciprocal-primitive-cell" type="checkbox" checked />
+        <input id="show-reciprocal-primitive-cell" type="checkbox" />
         reciprocal primitive cell
       </label>
 
