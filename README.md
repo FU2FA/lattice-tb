@@ -66,7 +66,7 @@ Then build and deploy the `dist/` folder, or use GitHub Actions.
 
 The band calculation uses a Bloch tight-binding Hamiltonian:
 
-$$
+```math
 H_{\alpha\beta}(\mathbf{k})
 =
 \epsilon_\alpha \delta_{\alpha\beta}
@@ -83,15 +83,15 @@ i\mathbf{k}\cdot
 \mathbf{r}_\alpha
 \right)
 \right].
-$$
+```
 
 For each k-point, the Hamiltonian is diagonalized:
 
-$$
+```math
 H(\mathbf{k})\,u_n(\mathbf{k})
 =
 E_n(\mathbf{k})\,u_n(\mathbf{k}).
-$$
+```
 
 The eigenvalues form the band structure.
 
@@ -99,28 +99,28 @@ The eigenvalues form the band structure.
 
 DOS is estimated by sampling a k-grid and applying Gaussian broadening:
 
-$$
+```math
 D(E)
 =
 \frac{1}{N_k}
 \sum_{\mathbf{k},n}
 G_\eta\left(E - E_n(\mathbf{k})\right).
-$$
+```
 
-Here, \(G_\eta\) is the Gaussian broadening kernel and \(N_k\) is the number of sampled k-points.
+Here, $`G_\eta`$ is the Gaussian broadening kernel and $`N_k`$ is the number of sampled k-points.
 
 PDOS uses orbital or site weights from eigenvectors:
 
-$$
+```math
 D_p(E)
 =
 \frac{1}{N_k}
 \sum_{\mathbf{k},n}
 w_{p,n}(\mathbf{k})
 G_\eta\left(E - E_n(\mathbf{k})\right).
-$$
+```
 
-The Fermi level is estimated by filling states from low to high energy using spin degeneracy \(g_s = 2\) and the selected number of electrons per cell.
+The Fermi level is estimated by filling states from low to high energy using spin degeneracy $`g_s = 2`$ and the selected number of electrons per cell.
 
 ## High-symmetry path limitations
 
