@@ -572,14 +572,18 @@ select option {
 
 /* v73 compact band overlay with right-side actions */
 .floating-band-overlay {
+  --band-overlay-width: 560px;
+  --band-overlay-height: 165px;
+  --band-action-width: 116px;
+
   position: fixed;
   left: auto;
   right: 400px;
   bottom: 18px;
-  width: min(720px, calc(100vw - 700px));
-  min-width: 560px;
+  width: min(var(--band-overlay-width), calc(100vw - 700px));
+  min-width: 0;
   z-index: 1000;
-  padding: 10px 12px 12px;
+  padding: 9px 10px 10px;
   border: 1px solid rgba(148, 163, 184, 0.32);
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.88);
@@ -589,29 +593,110 @@ select option {
   pointer-events: auto;
 }
 
+.floating-band-overlay.size-small {
+  --band-overlay-width: 500px;
+  --band-overlay-height: 145px;
+  --band-action-width: 108px;
+}
+
+.floating-band-overlay.size-medium {
+  --band-overlay-width: 680px;
+  --band-overlay-height: 210px;
+  --band-action-width: 126px;
+}
+
+.floating-band-overlay.size-large {
+  --band-overlay-width: 860px;
+  --band-overlay-height: 285px;
+  --band-action-width: 136px;
+}
+
 .floating-band-overlay.hidden {
   display: block;
+}
+
+.floating-band-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
 }
 
 .floating-band-overlay .overlay-title {
   font-size: 12px;
   font-weight: 700;
   color: #e2e8f0;
-  margin-bottom: 6px;
   letter-spacing: 0.02em;
+}
+
+.band-overlay-size-controls {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.band-overlay-size-controls button {
+  width: 26px;
+  min-width: 26px;
+  height: 23px;
+  margin: 0;
+  padding: 0;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.band-overlay-size-controls button.active {
+  background: #60a5fa;
+  color: #08111f;
+}
+
+.band-overlay-resize-handle {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  opacity: 0.75;
+}
+
+.band-overlay-resize-handle::before,
+.band-overlay-resize-handle::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  border-right: 2px solid rgba(226, 232, 240, 0.75);
+  border-bottom: 2px solid rgba(226, 232, 240, 0.75);
+}
+
+.band-overlay-resize-handle::before {
+  width: 12px;
+  height: 12px;
+}
+
+.band-overlay-resize-handle::after {
+  width: 7px;
+  height: 7px;
 }
 
 .floating-band-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 132px;
+  grid-template-columns: minmax(0, 1fr) var(--band-action-width);
   gap: 10px;
   align-items: stretch;
 }
 
 .floating-band-canvas {
   width: 100%;
-  height: 250px;
-  min-height: 160px;
+  height: var(--band-overlay-height);
+  min-height: 120px;
   margin: 0;
 }
 
@@ -625,21 +710,27 @@ select option {
 .floating-band-actions button {
   width: 100%;
   margin: 0;
-  padding: 7px 8px;
-  font-size: 12px;
-  line-height: 3.25;
+  padding: 6px 7px;
+  font-size: 11px;
+  line-height: 1.2;
   white-space: normal;
 }
 
 @media (max-width: 1380px) {
   .floating-band-overlay {
     right: 18px;
-    width: min(680px, calc(100vw - 36px));
+    width: min(var(--band-overlay-width), calc(100vw - 36px));
     min-width: 0;
   }
 }
 
 @media (max-width: 760px) {
+  .floating-band-overlay {
+    right: 10px;
+    bottom: 10px;
+    width: calc(100vw - 20px);
+  }
+
   .floating-band-content {
     grid-template-columns: 1fr;
   }
@@ -649,7 +740,7 @@ select option {
   }
 
   .floating-band-canvas {
-    height: 170px;
+    height: min(var(--band-overlay-height), 170px);
   }
 }
 

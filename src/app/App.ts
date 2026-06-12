@@ -61,6 +61,7 @@ export class App {
   private previousSplitState = false;
   private hoveredBandK: Vec3 | null = null;
   private customKPathLabels: string[] | null = null;
+  private bandOverlaySize: "small" | "medium" | "large" = "small";
 
   private latticeSelect!: HTMLSelectElement;
   private modelSelect!: HTMLSelectElement;
@@ -107,7 +108,14 @@ export class App {
         <aside class="panel right" id="right-panel"></aside>
       </div>
       <div class="floating-band-overlay" id="floating-band-overlay">
-        <div class="overlay-title">Band plot</div>
+        <div class="floating-band-header">
+          <div class="overlay-title">Band plot</div>
+          <div class="band-overlay-size-controls" aria-label="Band plot size">
+            <button id="band-overlay-small-button" class="secondary-button" type="button" title="Small band plot">S</button>
+            <button id="band-overlay-medium-button" class="secondary-button" type="button" title="Medium band plot">M</button>
+            <button id="band-overlay-large-button" class="secondary-button" type="button" title="Large band plot">L</button>
+          </div>
+        </div>
         <div class="floating-band-content">
           <canvas id="band-canvas" class="band-canvas floating-band-canvas"></canvas>
           <div class="floating-band-actions">
@@ -117,6 +125,7 @@ export class App {
             <button id="export-model-button" class="secondary-button">Export model JSON</button>
           </div>
         </div>
+        <div id="band-overlay-resize-handle" class="band-overlay-resize-handle" title="Drag to resize"></div>
       </div>
     `;
 
@@ -124,6 +133,7 @@ export class App {
     this.realSceneRoot = this.root.querySelector<HTMLDivElement>("#real-scene-pane")!;
     this.reciprocalSceneRoot = this.root.querySelector<HTMLDivElement>("#reciprocal-scene-pane")!;
     this.floatingBandOverlay = this.root.querySelector<HTMLDivElement>("#floating-band-overlay")!;
+    this.initializeBandOverlaySizeControls();
 
     this.realManager = new SceneManager(this.realSceneRoot);
     this.reciprocalManager = new SceneManager(this.reciprocalSceneRoot);
@@ -142,6 +152,242 @@ export class App {
 
     this.updateModelOptions();
     this.refreshAll();
+  }
+
+  private initializeBandOverlaySizeControls(): void {
+    const saved = window.localStorage.getItem("lattice-tb-band-overlay-size");
+    if (saved === "small" || saved === "medium" || saved === "large") {
+      this.bandOverlaySize = saved;
+    }
+
+    this.applyBandOverlaySize();
+
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-small-button")!.addEventListener("click", () => {
+      this.setBandOverlaySize("small");
+    });
+
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-medium-button")!.addEventListener("click", () => {
+      this.setBandOverlaySize("medium");
+    });
+
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-large-button")!.addEventListener("click", () => {
+      this.setBandOverlaySize("large");
+    });
+
+    this.initializeBandOverlayDrag();
+    this.initializeBandOverlayResize();
+
+    requestAnimationFrame(() => {
+      this.restoreBandOverlayRect();
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    window.addEventListener("resize", () => {
+      this.clampBandOverlayToViewport();
+      window.dispatchEvent(new Event("resize"));
+    });
+  }
+
+  private setBandOverlaySize(size: "small" | "medium" | "large"): void {
+    this.bandOverlaySize = size;
+    window.localStorage.setItem("lattice-tb-band-overlay-size", size);
+    this.applyBandOverlaySize();
+
+    const preset = this.bandOverlayPresetSize(size);
+    this.ensureBandOverlayUsesLeftTop();
+    this.floatingBandOverlay.style.width = `${preset.width}px`;
+    this.floatingBandOverlay.style.setProperty("--band-overlay-height", `${preset.canvasHeight}px`);
+    this.persistBandOverlayRect();
+    this.clampBandOverlayToViewport();
+
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  }
+
+  private applyBandOverlaySize(): void {
+    this.floatingBandOverlay.classList.toggle("size-small", this.bandOverlaySize === "small");
+    this.floatingBandOverlay.classList.toggle("size-medium", this.bandOverlaySize === "medium");
+    this.floatingBandOverlay.classList.toggle("size-large", this.bandOverlaySize === "large");
+
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-small-button")?.classList.toggle("active", this.bandOverlaySize === "small");
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-medium-button")?.classList.toggle("active", this.bandOverlaySize === "medium");
+    this.root.querySelector<HTMLButtonElement>("#band-overlay-large-button")?.classList.toggle("active", this.bandOverlaySize === "large");
+  }
+
+  private bandOverlayPresetSize(size: "small" | "medium" | "large"): { width: number; canvasHeight: number } {
+    if (size === "large") return { width: 860, canvasHeight: 285 };
+    if (size === "medium") return { width: 680, canvasHeight: 210 };
+    return { width: 500, canvasHeight: 145 };
+  }
+
+  private ensureBandOverlayUsesLeftTop(): DOMRect {
+    const rect = this.floatingBandOverlay.getBoundingClientRect();
+
+    this.floatingBandOverlay.style.left = `${rect.left}px`;
+    this.floatingBandOverlay.style.top = `${rect.top}px`;
+    this.floatingBandOverlay.style.right = "auto";
+    this.floatingBandOverlay.style.bottom = "auto";
+    this.floatingBandOverlay.style.width = `${rect.width}px`;
+
+    const canvas = this.root.querySelector<HTMLCanvasElement>("#band-canvas");
+    if (canvas) {
+      this.floatingBandOverlay.style.setProperty("--band-overlay-height", `${canvas.getBoundingClientRect().height}px`);
+    }
+
+    return rect;
+  }
+
+  private restoreBandOverlayRect(): void {
+    const raw = window.localStorage.getItem("lattice-tb-band-overlay-rect-v1");
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const rect = JSON.parse(raw) as { left?: number; top?: number; width?: number; canvasHeight?: number };
+      if (
+        typeof rect.left !== "number" ||
+        typeof rect.top !== "number" ||
+        typeof rect.width !== "number" ||
+        typeof rect.canvasHeight !== "number"
+      ) {
+        return;
+      }
+
+      this.floatingBandOverlay.style.left = `${rect.left}px`;
+      this.floatingBandOverlay.style.top = `${rect.top}px`;
+      this.floatingBandOverlay.style.right = "auto";
+      this.floatingBandOverlay.style.bottom = "auto";
+      this.floatingBandOverlay.style.width = `${this.clamp(rect.width, 340, Math.max(360, window.innerWidth - 20))}px`;
+      this.floatingBandOverlay.style.setProperty("--band-overlay-height", `${this.clamp(rect.canvasHeight, 110, Math.max(140, window.innerHeight - 130))}px`);
+      this.clampBandOverlayToViewport();
+    } catch {
+      window.localStorage.removeItem("lattice-tb-band-overlay-rect-v1");
+    }
+  }
+
+  private persistBandOverlayRect(): void {
+    const rect = this.floatingBandOverlay.getBoundingClientRect();
+    const canvas = this.root.querySelector<HTMLCanvasElement>("#band-canvas");
+    const canvasHeight = canvas?.getBoundingClientRect().height ?? (Number.parseFloat(getComputedStyle(this.floatingBandOverlay).getPropertyValue("--band-overlay-height")) || 145);
+
+    window.localStorage.setItem("lattice-tb-band-overlay-rect-v1", JSON.stringify({
+      left: Math.round(rect.left),
+      top: Math.round(rect.top),
+      width: Math.round(rect.width),
+      canvasHeight: Math.round(canvasHeight),
+    }));
+  }
+
+  private clampBandOverlayToViewport(): void {
+    const rect = this.floatingBandOverlay.getBoundingClientRect();
+    const margin = 8;
+    const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+    const left = this.clamp(rect.left, margin, maxLeft);
+    const top = this.clamp(rect.top, margin, maxTop);
+
+    this.floatingBandOverlay.style.left = `${left}px`;
+    this.floatingBandOverlay.style.top = `${top}px`;
+    this.floatingBandOverlay.style.right = "auto";
+    this.floatingBandOverlay.style.bottom = "auto";
+    this.persistBandOverlayRect();
+  }
+
+  private initializeBandOverlayDrag(): void {
+    const header = this.floatingBandOverlay.querySelector<HTMLDivElement>(".floating-band-header");
+    if (!header) return;
+
+    header.addEventListener("pointerdown", (event) => {
+      const target = event.target as HTMLElement;
+      if (target.closest("button")) return;
+
+      event.preventDefault();
+      header.setPointerCapture(event.pointerId);
+
+      const rect = this.ensureBandOverlayUsesLeftTop();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startLeft = rect.left;
+      const startTop = rect.top;
+
+      const onMove = (moveEvent: PointerEvent) => {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        const currentRect = this.floatingBandOverlay.getBoundingClientRect();
+        const margin = 8;
+
+        const left = this.clamp(startLeft + dx, margin, Math.max(margin, window.innerWidth - currentRect.width - margin));
+        const top = this.clamp(startTop + dy, margin, Math.max(margin, window.innerHeight - currentRect.height - margin));
+
+        this.floatingBandOverlay.style.left = `${left}px`;
+        this.floatingBandOverlay.style.top = `${top}px`;
+      };
+
+      const onUp = () => {
+        header.releasePointerCapture(event.pointerId);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        this.persistBandOverlayRect();
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    });
+  }
+
+  private initializeBandOverlayResize(): void {
+    const handle = this.root.querySelector<HTMLDivElement>("#band-overlay-resize-handle");
+    if (!handle) return;
+
+    handle.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      handle.setPointerCapture(event.pointerId);
+
+      const rect = this.ensureBandOverlayUsesLeftTop();
+      const canvas = this.root.querySelector<HTMLCanvasElement>("#band-canvas");
+      const canvasHeight = canvas?.getBoundingClientRect().height ?? 145;
+
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startWidth = rect.width;
+      const startCanvasHeight = canvasHeight;
+
+      const onMove = (moveEvent: PointerEvent) => {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+
+        const maxWidth = Math.max(360, window.innerWidth - rect.left - 12);
+        const maxCanvasHeight = Math.max(140, window.innerHeight - rect.top - 105);
+
+        const width = this.clamp(startWidth + dx, 340, maxWidth);
+        const nextCanvasHeight = this.clamp(startCanvasHeight + dy, 110, maxCanvasHeight);
+
+        this.floatingBandOverlay.style.width = `${width}px`;
+        this.floatingBandOverlay.style.setProperty("--band-overlay-height", `${nextCanvasHeight}px`);
+
+        window.dispatchEvent(new Event("resize"));
+      };
+
+      const onUp = () => {
+        handle.releasePointerCapture(event.pointerId);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        this.persistBandOverlayRect();
+
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event("resize"));
+        });
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    });
+  }
+
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value));
   }
 
   start(): void {
